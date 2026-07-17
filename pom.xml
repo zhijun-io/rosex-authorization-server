@@ -18,8 +18,24 @@
     <name>rosex-authorization-server-parent</name>
     <description>Local OIDC Authorization Server for Rosex development and tests</description>
 
+    <url>https://github.com/zhijun-io/rosex-authorization-server</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/zhijun-io/rosex-authorization-server.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/zhijun-io/rosex-authorization-server.git</developerConnection>
+        <url>https://github.com/zhijun-io/rosex-authorization-server</url>
+    </scm>
+
     <modules>
-        <module>rosex-authorization-server-app</module>
+        <module>rosex-authorization-server</module>
         <module>rosex-authorization-server-testcontainers</module>
         <module>rosex-authorization-server-sample</module>
     </modules>
@@ -39,7 +55,7 @@
             </dependency>
             <dependency>
                 <groupId>io.zhijun.rosex</groupId>
-                <artifactId>rosex-authorization-server-app</artifactId>
+                <artifactId>rosex-authorization-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -29,7 +29,7 @@
 | 模块 | 坐标 | 说明 |
 |---|---|---|
 | `rosex-authorization-server-parent` | 父 POM | 版本与依赖管理 |
-| `rosex-authorization-server-app` | 可运行 AS | 打 jar / 构建 Docker 镜像 |
+| `rosex-authorization-server` | 可运行 AS | 打 jar / 构建 Docker 镜像 |
 | `rosex-authorization-server-testcontainers` | TC 封装 | `RosexAuthorizationServerContainer` |
 | `rosex-authorization-server-sample` | 示例 Client | 浏览器登录演示 + OIDC IT |
 
@@ -39,7 +39,7 @@
 
 ```bash
 ./mvnw -ntp clean package -DskipTests
-java -jar rosex-authorization-server-app/target/rosex-authorization-server.jar --config=samples/config.yml
+java -jar rosex-authorization-server/target/rosex-authorization-server.jar --config=samples/config.yml
 ```
 
 常用参数：
@@ -70,7 +70,7 @@ java -jar rosex-authorization-server-app/target/rosex-authorization-server.jar -
 
 ## 配置
 
-配置前缀：`rosex.authorization-server`。示例见 [`samples/config.yml`](samples/config.yml)：
+配置前缀：`rosex.authorization-server`。示例见 [`samples/config.yml`](docs/config.yml)：
 
 ```yaml
 rosex:
@@ -237,7 +237,7 @@ class OAuth2ClientIT {
 构建并运行：
 
 ```bash
-./mvnw -ntp -B -pl rosex-authorization-server-app -am package -DskipTests
+./mvnw -ntp -B -pl rosex-authorization-server -am package -DskipTests
 docker build -t ghcr.io/zhijun-io/rosex-authorization-server:local .
 docker run --rm -p 9000:9000 ghcr.io/zhijun-io/rosex-authorization-server:local
 ```
@@ -297,3 +297,17 @@ server:
 ## 与 Rosex 的关系
 
 本仓库是**独立可运行 IdP**，供 sample / IT / 本地联调使用。Rosex 主仓可通过 DevService 或 Compose 按需拉起该镜像；**不会**把 IdP 源码并入 `rosex` monorepo（见 Rosex ADR 0001：不做身份权威库产品）。
+
+## 文档
+
+| 文档 | 说明 |
+|---|---|
+| [CHANGELOG.md](CHANGELOG.md) | 版本变更记录 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
+| [SECURITY.md](SECURITY.md) | 安全策略与披露 |
+| [LICENSE](LICENSE) | Apache License 2.0 |
+| [NOTICE](NOTICE) | 版权与第三方声明 |
+
+## 许可
+
+Copyright © zhijun-io contributors. Licensed under the [Apache License 2.0](LICENSE).

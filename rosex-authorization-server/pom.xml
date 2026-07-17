@@ -10,8 +10,8 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>rosex-authorization-server-app</artifactId>
-    <name>rosex-authorization-server-app</name>
+    <artifactId>rosex-authorization-server</artifactId>
+    <name>rosex-authorization-server</name>
     <description>Runnable OIDC Authorization Server</description>
 
     <dependencies>
