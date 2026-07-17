@@ -30,3 +30,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### TLS sample private keys (regenerate via scripts/generate-tls-certs.sh) ###
+samples/tls/certs/*.key
+samples/tls/certs/*.srl
+samples/tls/certs/*.csr

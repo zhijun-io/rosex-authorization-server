@@ -70,15 +70,29 @@ public final class Cli {
         Set<String> knownFlags = Set.of(HELP_FLAG, HELP_FLAG_SHORT, CONFIG_FLAG, PRINT_SAMPLE_CONFIG_FLAG);
 
         for (String flag : flags) {
-            if (flag.startsWith("-")
-                    && !knownFlags.contains(flag.toLowerCase(Locale.getDefault()))
-                    && !knownFlags.contains(flag.split("=", 2)[0].toLowerCase(Locale.getDefault()))) {
-                ConfigurationPrinter.printUnknownFlag(flag);
-                return true;
+            if (!flag.startsWith("-")) {
+                continue;
             }
+            String name = flag.split("=", 2)[0].toLowerCase(Locale.getDefault());
+            if (knownFlags.contains(name) || isPassthroughBootProperty(name)) {
+                continue;
+            }
+            ConfigurationPrinter.printUnknownFlag(flag);
+            return true;
         }
 
         return false;
+    }
+
+    /**
+     * Allow Spring Boot / server property flags (e.g. {@code --server.ssl.*}) so TLS overlays
+     * and Compose can pass configuration without going through {@code --config} alone.
+     */
+    static boolean isPassthroughBootProperty(String flagName) {
+        return flagName.startsWith("--spring.")
+                || flagName.startsWith("--server.")
+                || flagName.startsWith("--logging.")
+                || flagName.startsWith("--management.");
     }
 
     static class MultipleFlagsException extends SsoException {

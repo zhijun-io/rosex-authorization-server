@@ -1,0 +1,14 @@
+# Container-path TLS overlay used by compose/docker-compose.tls.yml
+spring:
+  ssl:
+    bundle:
+      pem:
+        server:
+          keystore:
+            certificate: /certs/server.crt
+            private-key: /certs/server.key
+
+server:
+  ssl:
+    bundle: server
+    client-auth: NONE

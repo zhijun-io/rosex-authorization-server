@@ -1,0 +1,16 @@
+# Container-path mTLS overlay used by compose/docker-compose.mtls.yml
+spring:
+  ssl:
+    bundle:
+      pem:
+        server:
+          keystore:
+            certificate: /certs/server.crt
+            private-key: /certs/server.key
+          truststore:
+            certificate: /certs/client-ca.crt
+
+server:
+  ssl:
+    bundle: server
+    client-auth: NEED

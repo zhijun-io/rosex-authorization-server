@@ -1,6 +1,10 @@
 package io.zhijun.rosex.authorization.testcontainers;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -27,6 +31,16 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 
 	private static final String CONFIG_IN_CONTAINER = "/config/config.yml";
 
+	private static final String SERVER_CERT_IN_CONTAINER = "/certs/server.crt";
+
+	private static final String SERVER_KEY_IN_CONTAINER = "/certs/server.key";
+
+	private static final String CLIENT_CA_IN_CONTAINER = "/certs/client-ca.crt";
+
+	private final List<String> commandArgs = new ArrayList<>();
+
+	private boolean https;
+
 	public RosexAuthorizationServerContainer() {
 		this(DockerImageName.parse(DEFAULT_IMAGE_NAME));
 	}
@@ -52,15 +66,109 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 	public RosexAuthorizationServerContainer withConfig(MountableFile configFile) {
 		Objects.requireNonNull(configFile, "configFile");
 		withCopyFileToContainer(configFile, CONFIG_IN_CONTAINER);
-		withCommand("--config=" + CONFIG_IN_CONTAINER);
+		replaceCommandArgPrefix("--config=", "--config=" + CONFIG_IN_CONTAINER);
+		applyCommand();
 		return this;
 	}
 
+	/**
+	 * Mount a classpath resource as the Authorization Server {@code --config} file.
+	 */
+	public RosexAuthorizationServerContainer withClasspathConfig(String classpathResource) {
+		Objects.requireNonNull(classpathResource, "classpathResource");
+		return withConfig(MountableFile.forClasspathResource(classpathResource));
+	}
+
+	/**
+	 * Enable HTTPS with a PEM certificate / private key pair (typically self-signed for tests).
+	 *
+	 * <p>Health checks use {@code Wait.forHttps(...).allowInsecure()} so self-signed certs work.
+	 */
+	public RosexAuthorizationServerContainer withTls(Path certificate, Path privateKey) {
+		Objects.requireNonNull(certificate, "certificate");
+		Objects.requireNonNull(privateKey, "privateKey");
+		withCopyFileToContainer(MountableFile.forHostPath(certificate), SERVER_CERT_IN_CONTAINER);
+		withCopyFileToContainer(MountableFile.forHostPath(privateKey), SERVER_KEY_IN_CONTAINER);
+		replaceCommandArgPrefix("--spring.ssl.bundle.pem.server.keystore.certificate=",
+				"--spring.ssl.bundle.pem.server.keystore.certificate=file:" + SERVER_CERT_IN_CONTAINER);
+		replaceCommandArgPrefix("--spring.ssl.bundle.pem.server.keystore.private-key=",
+				"--spring.ssl.bundle.pem.server.keystore.private-key=file:" + SERVER_KEY_IN_CONTAINER);
+		replaceCommandArgPrefix("--server.ssl.bundle=", "--server.ssl.bundle=server");
+		replaceCommandArgPrefix("--server.ssl.client-auth=", "--server.ssl.client-auth=NONE");
+		this.https = true;
+		waitingFor(Wait.forHttps("/actuator/health").forPort(PORT).allowInsecure());
+		applyCommand();
+		return this;
+	}
+
+	/**
+	 * Enable mTLS: server presents {@code certificate}/{@code privateKey}, and requires client
+	 * certificates signed by {@code clientCaCertificate}.
+	 */
+	public RosexAuthorizationServerContainer withMutualTls(Path certificate, Path privateKey,
+			Path clientCaCertificate) {
+		Objects.requireNonNull(clientCaCertificate, "clientCaCertificate");
+		withTls(certificate, privateKey);
+		withCopyFileToContainer(MountableFile.forHostPath(clientCaCertificate), CLIENT_CA_IN_CONTAINER);
+		replaceCommandArgPrefix("--spring.ssl.bundle.pem.server.truststore.certificate=",
+				"--spring.ssl.bundle.pem.server.truststore.certificate=file:" + CLIENT_CA_IN_CONTAINER);
+		replaceCommandArgPrefix("--server.ssl.client-auth=", "--server.ssl.client-auth=NEED");
+		applyCommand();
+		return this;
+	}
+
+	public boolean isHttps() {
+		return this.https;
+	}
+
+	public int getHttpPort() {
+		return getMappedPort(PORT);
+	}
+
 	public String getIssuerUri() {
-		return "http://" + getHost() + ":" + getMappedPort(PORT);
+		String scheme = this.https ? "https" : "http";
+		return scheme + "://" + getHost() + ":" + getMappedPort(PORT);
 	}
 
 	public String getOpenIdConfigurationUri() {
 		return getIssuerUri() + "/.well-known/openid-configuration";
+	}
+
+	/**
+	 * Boot OAuth2 client property keys/values for the default provider registration id.
+	 *
+	 * <p>Requires the container to be started (uses the mapped issuer URI). Prefer
+	 * {@link #oauth2ClientProperties(String, String)} when composing maps before start.
+	 */
+	public Map<String, String> oauth2ClientProperties() {
+		return oauth2ClientProperties(DEFAULT_PROVIDER_ID, getIssuerUri());
+	}
+
+	public Map<String, String> oauth2ClientProperties(String providerId) {
+		return oauth2ClientProperties(providerId, getIssuerUri());
+	}
+
+	public Map<String, String> oauth2ClientProperties(String providerId, String issuerUri) {
+		Objects.requireNonNull(providerId, "providerId");
+		Objects.requireNonNull(issuerUri, "issuerUri");
+		Map<String, String> properties = new LinkedHashMap<>();
+		properties.put("spring.security.oauth2.client.provider." + providerId + ".issuer-uri", issuerUri);
+		properties.put("spring.security.oauth2.client.registration." + providerId + ".provider", providerId);
+		properties.put("spring.security.oauth2.client.registration." + providerId + ".client-id",
+				DEFAULT_CLIENT_ID);
+		properties.put("spring.security.oauth2.client.registration." + providerId + ".client-secret",
+				DEFAULT_CLIENT_SECRET);
+		return properties;
+	}
+
+	private void replaceCommandArgPrefix(String prefix, String replacement) {
+		commandArgs.removeIf(arg -> arg.startsWith(prefix));
+		commandArgs.add(replacement);
+	}
+
+	private void applyCommand() {
+		if (!commandArgs.isEmpty()) {
+			withCommand(commandArgs.toArray(String[]::new));
+		}
 	}
 }

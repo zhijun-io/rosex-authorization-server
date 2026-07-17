@@ -8,11 +8,16 @@
 
 - 可运行模块由 `rosex-authorization-server-app` 重命名为 `rosex-authorization-server`
 - `rosex-authorization-server-sample` 设置 `maven.deploy.skip=true`，不发布到 Maven
+- CLI 放行 `--spring.*` / `--server.*` 等 Boot 属性，支持 TLS 叠加配置
 
 ### Added
 
 - README 徽章（CI / License / Java / Spring Boot / GHCR）
 - CHANGELOG、CONTRIBUTING、SECURITY、NOTICE
+- Testcontainers：`withClasspathConfig` / `withTls` / `withMutualTls` / `oauth2ClientProperties`
+- YAML：`samples/config.yml` 补充 clients；`samples/tls/*` TLS/mTLS 样例
+- Docker Compose：`compose/docker-compose.yml`（HTTP）、`.tls.yml`、`.mtls.yml`
+- `scripts/generate-tls-certs.sh` 生成本地自签证书
 ## [0.1.0-SNAPSHOT] - 2026-07-17
 
 ### Added

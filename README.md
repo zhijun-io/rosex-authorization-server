@@ -28,7 +28,9 @@
 - **健康检查**：`/actuator/health`，方便 Testcontainers / Docker wait
 - **Testcontainers 模块**：固定镜像、端口、issuer、默认 client 常量
 - **Sample 应用**：端到端演示 OAuth2 Login（**不发布到 Maven**）
-- **TLS**：沿用 Spring Boot SSL Bundle 配置
+- **TLS / mTLS 样例**：YAML 叠加配置 + 证书生成脚本
+- **Docker Compose**：HTTP / HTTPS / mTLS 示例
+- **Testcontainers**：config / TLS / mTLS / OAuth2 属性 Map 封装
 
 ## 模块
 
@@ -228,9 +230,13 @@ class OAuth2ClientIT {
 
 | API | 说明 |
 |---|---|
-| `getIssuerUri()` | 动态映射后的 issuer |
+| `getIssuerUri()` | 动态映射后的 issuer（HTTP/HTTPS） |
 | `getOpenIdConfigurationUri()` | OIDC discovery URL |
-| `withConfig(Path)` / `withConfig(MountableFile)` | 挂载自定义 YAML |
+| `getHttpPort()` | 映射后的宿主机端口 |
+| `withConfig(Path)` / `withConfig(MountableFile)` / `withClasspathConfig` | 挂载自定义 YAML |
+| `withTls(cert, key)` | HTTPS + insecure health wait |
+| `withMutualTls(cert, key, clientCa)` | mTLS（`client-auth=NEED`） |
+| `oauth2ClientProperties(...)` | 生成 Boot OAuth2 client 属性 Map |
 | `DEFAULT_IMAGE_NAME` | `ghcr.io/zhijun-io/rosex-authorization-server:latest` |
 | `DEFAULT_CLIENT_ID` / `DEFAULT_CLIENT_SECRET` | 与默认 Client 一致 |
 | `DEFAULT_PROVIDER_ID` | `rosex-authorization-server` |
@@ -265,27 +271,44 @@ docker run --rm -p 9000:9000 \
 
 CI 会在 `main` 推送时构建并发布 `linux/amd64` 与 `linux/arm64` 镜像。
 
-## TLS support
+## Docker Compose
 
-本项目基于 Spring Boot，可直接使用 Boot 的 SSL Bundle 对外提供 HTTPS。在配置中增加：
+见 [`compose/README.md`](compose/README.md)。
 
-```yaml
-spring:
-  ssl:
-    bundle:
-      pem:
-        server:
-          keystore:
-            certificate: /path/to/certificate/localhost.pem
-            private-key: /path/to/private/key/localhost-key.pem
+```bash
+# HTTP
+docker compose -f compose/docker-compose.yml up
 
-server:
-  ssl:
-    bundle: server
-    client-auth: NONE
+# HTTPS（先生成证书）
+./scripts/generate-tls-certs.sh
+docker compose -f compose/docker-compose.tls.yml up
+
+# mTLS
+docker compose -f compose/docker-compose.mtls.yml up
 ```
 
-启用 TLS 后，客户端的 `issuer-uri` 需改为 `https://...`，并确保证书链可被客户端信任（本地可用自签证书 + 信任库，或仅在受控环境关闭校验）。
+## TLS / mTLS
+
+本项目基于 Spring Boot SSL Bundle。仓库提供现成样例（**仅本地 / 测试**）：
+
+| 文件 | 说明 |
+|---|---|
+| [`samples/tls/application-tls.yml`](samples/tls/application-tls.yml) | HTTPS only |
+| [`samples/tls/application-mtls.yml`](samples/tls/application-mtls.yml) | mTLS（`client-auth: NEED`） |
+| [`scripts/generate-tls-certs.sh`](scripts/generate-tls-certs.sh) | 生成自签 PEM |
+| [`samples/tls/README.md`](samples/tls/README.md) | 详细步骤 |
+
+```bash
+./scripts/generate-tls-certs.sh
+./mvnw -ntp -pl rosex-authorization-server -am package -DskipTests
+java -jar rosex-authorization-server/target/rosex-authorization-server.jar \
+  --config=samples/config.yml \
+  --spring.config.additional-location=optional:file:samples/tls/application-tls.yml
+```
+
+CLI 会放行 `--spring.*` / `--server.*` 等 Boot 属性，便于 Compose 与 TLS 叠加配置。
+
+启用 TLS 后，客户端 `issuer-uri` 需为 `https://...`，并信任 `samples/tls/certs/server.crt`（或仅在测试中关闭校验）。
 
 参考：
 
@@ -311,6 +334,8 @@ server:
 | [CHANGELOG.md](CHANGELOG.md) | 版本变更记录 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南 |
 | [SECURITY.md](SECURITY.md) | 安全策略与披露 |
+| [compose/README.md](compose/README.md) | Docker Compose 示例 |
+| [samples/tls/README.md](samples/tls/README.md) | TLS / mTLS 样例 |
 | [LICENSE](LICENSE) | Apache License 2.0 |
 | [NOTICE](NOTICE) | 版权与第三方声明 |
 
