@@ -2,8 +2,11 @@ package io.zhijun.rosex.authorization.testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.utility.MountableFile;
 
 class RosexAuthorizationServerContainerTest {
@@ -18,6 +21,8 @@ class RosexAuthorizationServerContainerTest {
 		assertThat(RosexAuthorizationServerContainer.DEFAULT_CLIENT_SECRET).isEqualTo("default-client-secret");
 		assertThat(container.getExposedPorts()).contains(9000);
 		assertThat(container.isHttps()).isFalse();
+		assertThat(container.getReadyProbe())
+				.isEqualTo(RosexAuthorizationServerContainer.ReadyProbe.HTTP_HEALTH);
 	}
 
 	@Test
@@ -25,6 +30,42 @@ class RosexAuthorizationServerContainerTest {
 		RosexAuthorizationServerContainer container = new RosexAuthorizationServerContainer()
 				.withConfig(MountableFile.forClasspathResource("tc-config.yml"));
 		assertThat(container.getCommandParts()).contains("--config=/config/config.yml");
+	}
+
+	@Test
+	void withTlsSetsHttpsHealthProbeAndServerSslArgs(@TempDir Path tempDir) throws Exception {
+		Path cert = tempDir.resolve("server.crt");
+		Path key = tempDir.resolve("server.key");
+		Files.writeString(cert, "cert");
+		Files.writeString(key, "key");
+
+		RosexAuthorizationServerContainer container = new RosexAuthorizationServerContainer()
+				.withTls(cert, key);
+
+		assertThat(container.isHttps()).isTrue();
+		assertThat(container.getReadyProbe())
+				.isEqualTo(RosexAuthorizationServerContainer.ReadyProbe.HTTPS_HEALTH);
+		assertThat(container.getCommandParts()).anyMatch(arg -> arg.contains("server.crt"));
+		assertThat(container.getCommandParts()).contains("--server.ssl.client-auth=NONE");
+	}
+
+	@Test
+	void withMutualTlsRequiresClientAuthAndUsesStartupLogProbe(@TempDir Path tempDir) throws Exception {
+		Path cert = tempDir.resolve("server.crt");
+		Path key = tempDir.resolve("server.key");
+		Path clientCa = tempDir.resolve("client-ca.crt");
+		Files.writeString(cert, "cert");
+		Files.writeString(key, "key");
+		Files.writeString(clientCa, "ca");
+
+		RosexAuthorizationServerContainer container = new RosexAuthorizationServerContainer()
+				.withMutualTls(cert, key, clientCa);
+
+		assertThat(container.isHttps()).isTrue();
+		assertThat(container.getReadyProbe())
+				.isEqualTo(RosexAuthorizationServerContainer.ReadyProbe.STARTUP_LOG);
+		assertThat(container.getCommandParts()).contains("--server.ssl.client-auth=NEED");
+		assertThat(container.getCommandParts()).anyMatch(arg -> arg.contains("client-ca.crt"));
 	}
 
 	@Test

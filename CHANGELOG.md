@@ -10,14 +10,11 @@
 - `rosex-authorization-server-sample` 设置 `maven.deploy.skip=true`，不发布到 Maven
 - CLI 放行 `--spring.*` / `--server.*` 等 Boot 属性，支持 TLS 叠加配置
 
-### Added
+### Fixed
 
-- README 徽章（CI / License / Java / Spring Boot / GHCR）
-- CHANGELOG、CONTRIBUTING、SECURITY、NOTICE
-- Testcontainers：`withClasspathConfig` / `withTls` / `withMutualTls` / `oauth2ClientProperties`
-- YAML：`samples/config.yml` 补充 clients；`samples/tls/*` TLS/mTLS 样例
-- Docker Compose：`compose/docker-compose.yml`（HTTP）、`.tls.yml`、`.mtls.yml`
-- `scripts/generate-tls-certs.sh` 生成本地自签证书
+- `withMutualTls` 在 `client-auth=NEED` 下不再使用无客户端证书的 HTTPS health wait（改为启动日志探测）
+- `samples/config.yml` 与 `Defaults.CLIENT` 对齐（含 `token_exchange` / `none`）
+- TLS 文档：gitignore 范围、host YAML 与 Compose YAML 分工
 ## [0.1.0-SNAPSHOT] - 2026-07-17
 
 ### Added

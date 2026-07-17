@@ -41,6 +41,17 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 
 	private boolean https;
 
+	private ReadyProbe readyProbe = ReadyProbe.HTTP_HEALTH;
+
+	/**
+	 * How the container decides it is ready. mTLS cannot use an unauthenticated HTTPS health probe.
+	 */
+	public enum ReadyProbe {
+		HTTP_HEALTH,
+		HTTPS_HEALTH,
+		STARTUP_LOG
+	}
+
 	public RosexAuthorizationServerContainer() {
 		this(DockerImageName.parse(DEFAULT_IMAGE_NAME));
 	}
@@ -52,7 +63,7 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 	public RosexAuthorizationServerContainer(DockerImageName dockerImageName) {
 		super(dockerImageName);
 		withExposedPorts(PORT);
-		waitingFor(Wait.forHttp("/actuator/health").forPort(PORT));
+		waitingForHttpHealth();
 	}
 
 	/**
@@ -96,7 +107,7 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 		replaceCommandArgPrefix("--server.ssl.bundle=", "--server.ssl.bundle=server");
 		replaceCommandArgPrefix("--server.ssl.client-auth=", "--server.ssl.client-auth=NONE");
 		this.https = true;
-		waitingFor(Wait.forHttps("/actuator/health").forPort(PORT).allowInsecure());
+		waitingForHttpsHealth();
 		applyCommand();
 		return this;
 	}
@@ -104,6 +115,9 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 	/**
 	 * Enable mTLS: server presents {@code certificate}/{@code privateKey}, and requires client
 	 * certificates signed by {@code clientCaCertificate}.
+	 *
+	 * <p>Readiness uses a startup log probe (not HTTPS health): unauthenticated health checks fail
+	 * when {@code client-auth=NEED}.
 	 */
 	public RosexAuthorizationServerContainer withMutualTls(Path certificate, Path privateKey,
 			Path clientCaCertificate) {
@@ -113,8 +127,13 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 		replaceCommandArgPrefix("--spring.ssl.bundle.pem.server.truststore.certificate=",
 				"--spring.ssl.bundle.pem.server.truststore.certificate=file:" + CLIENT_CA_IN_CONTAINER);
 		replaceCommandArgPrefix("--server.ssl.client-auth=", "--server.ssl.client-auth=NEED");
+		waitingForStartupLog();
 		applyCommand();
 		return this;
+	}
+
+	public ReadyProbe getReadyProbe() {
+		return this.readyProbe;
 	}
 
 	public boolean isHttps() {
@@ -170,5 +189,20 @@ public class RosexAuthorizationServerContainer extends GenericContainer<RosexAut
 		if (!commandArgs.isEmpty()) {
 			withCommand(commandArgs.toArray(String[]::new));
 		}
+	}
+
+	private void waitingForHttpHealth() {
+		this.readyProbe = ReadyProbe.HTTP_HEALTH;
+		waitingFor(Wait.forHttp("/actuator/health").forPort(PORT));
+	}
+
+	private void waitingForHttpsHealth() {
+		this.readyProbe = ReadyProbe.HTTPS_HEALTH;
+		waitingFor(Wait.forHttps("/actuator/health").forPort(PORT).allowInsecure());
+	}
+
+	private void waitingForStartupLog() {
+		this.readyProbe = ReadyProbe.STARTUP_LOG;
+		waitingFor(Wait.forLogMessage(".*Started AuthorizationServerApplication.*", 1));
 	}
 }

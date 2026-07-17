@@ -1,18 +1,25 @@
 # TLS / mTLS sample materials (local / test only)
 
-Generate self-signed PEMs:
+Generate self-signed PEMs (required before running TLS / Compose TLS examples):
 
 ```bash
 ./scripts/generate-tls-certs.sh
 ```
 
-Outputs under `samples/tls/certs/`:
+Outputs under `samples/tls/certs/` (gitignored except `.gitkeep`):
 
 | File | Purpose |
 |---|---|
 | `server.crt` / `server.key` | Authorization Server HTTPS identity |
-| `client-ca.crt` | CA used to verify client certificates (mTLS) |
+| `client-ca.crt` / `client-ca.key` | CA used to verify client certificates (mTLS) |
 | `client.crt` / `client.key` | Sample client certificate for mTLS callers |
+
+## Host YAML vs Compose YAML
+
+| File | Paths | Use with |
+|---|---|---|
+| `application-tls.yml` / `application-mtls.yml` | `samples/tls/certs/...` (host-relative) | `java -jar` from repo root |
+| `application-tls.compose.yml` / `application-mtls.compose.yml` | `/certs/...` (container paths) | `compose/docker-compose.*.yml` |
 
 ## HTTPS only
 
@@ -46,4 +53,6 @@ static RosexAuthorizationServerContainer authServer = new RosexAuthorizationServ
 
 For mTLS: `.withMutualTls(serverCrt, serverKey, Path.of("samples/tls/certs/client-ca.crt"))`.
 
-> Do not commit real private keys. `samples/tls/certs/*.key` is gitignored; regenerate locally.
+mTLS readiness uses a startup-log probe (not HTTPS `/actuator/health`), because health checks without a client certificate fail when `client-auth=NEED`.
+
+> Do not commit generated materials under `samples/tls/certs/` (ignored by git). Regenerate with `./scripts/generate-tls-certs.sh`.

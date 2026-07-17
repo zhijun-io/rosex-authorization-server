@@ -235,7 +235,8 @@ class OAuth2ClientIT {
 | `getHttpPort()` | 映射后的宿主机端口 |
 | `withConfig(Path)` / `withConfig(MountableFile)` / `withClasspathConfig` | 挂载自定义 YAML |
 | `withTls(cert, key)` | HTTPS + insecure health wait |
-| `withMutualTls(cert, key, clientCa)` | mTLS（`client-auth=NEED`） |
+| `withMutualTls(cert, key, clientCa)` | mTLS（`client-auth=NEED`；就绪探测改用启动日志） |
+| `getReadyProbe()` | `HTTP_HEALTH` / `HTTPS_HEALTH` / `STARTUP_LOG` |
 | `oauth2ClientProperties(...)` | 生成 Boot OAuth2 client 属性 Map |
 | `DEFAULT_IMAGE_NAME` | `ghcr.io/zhijun-io/rosex-authorization-server:latest` |
 | `DEFAULT_CLIENT_ID` / `DEFAULT_CLIENT_SECRET` | 与默认 Client 一致 |
