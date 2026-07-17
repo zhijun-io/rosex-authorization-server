@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jre-jammy AS builder
 WORKDIR /extracted
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
+RUN java -Djarmode=tools -jar app.jar extract --layers --launcher --destination extracted
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
