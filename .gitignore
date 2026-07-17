@@ -34,3 +34,6 @@ build/
 samples/tls/certs/*.key
 samples/tls/certs/*.srl
 samples/tls/certs/*.csr
+
+samples/tls/certs/*
+!samples/tls/certs/.gitkeep
