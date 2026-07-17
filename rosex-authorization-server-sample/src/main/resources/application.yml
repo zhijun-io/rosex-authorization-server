@@ -1,9 +1,15 @@
+server:
+  port: 8080
+
 spring:
+  application:
+    name: rosex-authorization-server-sample
   security:
     oauth2:
       client:
         registration:
           rosex-authorization-server:
+            provider: rosex-authorization-server
             client-id: default-client-id
             client-secret: default-client-secret
             client-name: Rosex Authorization Server
@@ -11,11 +17,11 @@ spring:
               - openid
               - email
               - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           rosex-authorization-server:
-            issuer-uri: http://localhost:9000
-
+            issuer-uri: http://127.0.0.1:9000
 
 logging:
   level:
-    org.springframework.security: trace
+    org.springframework.security: info

@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jre-jammy AS builder
 WORKDIR /extracted
-ARG JAR_FILE=target/*.jar
+ARG JAR_FILE=rosex-authorization-server-app/target/rosex-authorization-server.jar
 COPY ${JAR_FILE} app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --launcher --destination extracted
 
