@@ -3,9 +3,17 @@ server:
 
 spring:
   application:
-    name: spring-authorization-server
+    name: rosex-authorization-server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
 
 logging:
   level:
-    org.springframework.security: trace
-
+    org.springframework.security: info

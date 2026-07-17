@@ -10,7 +10,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>com.chensoul</groupId>
+    <groupId>io.zhijun.rosex</groupId>
     <artifactId>oauth2client-test</artifactId>
     <version>1.0-SNAPSHOT</version>
 

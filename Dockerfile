@@ -1,17 +1,17 @@
-FROM eclipse-temurin:21.0.6_7-jre-jammy AS builder
+FROM eclipse-temurin:21-jre-jammy AS builder
 WORKDIR /extracted
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
-RUN java -Djarmode=layertools -jar app.jar extract
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
 
-FROM eclipse-temurin:21.0.6_7-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-COPY --from=builder /extracted/dependencies/ ./
-COPY --from=builder /extracted/spring-boot-loader/ ./
-COPY --from=builder /extracted/snapshot-dependencies/ ./
-COPY --from=builder /extracted/application/ ./
+COPY --from=builder /extracted/extracted/dependencies/ ./
+COPY --from=builder /extracted/extracted/spring-boot-loader/ ./
+COPY --from=builder /extracted/extracted/snapshot-dependencies/ ./
+COPY --from=builder /extracted/extracted/application/ ./
 
-ARG EXPOSED_PORT=9000
-EXPOSE ${EXPOSED_PORT}
+ENV SERVER_PORT=9000
+EXPOSE 9000
 
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
