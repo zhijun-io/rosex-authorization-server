@@ -14,7 +14,7 @@
 |---|---|
 | `rosex-authorization-server` | 可运行 Authorization Server（Docker 镜像由此构建） |
 | `rosex-authorization-server-testcontainers` | 对外 Testcontainers 库；接口保持精简 |
-| `rosex-authorization-server-sample` | 演示用 Client，不作为生产模板 |
+| `rosex-authorization-server-sample` | 演示用 Client，不作为生产模板；**不发布到 Maven**（`maven.deploy.skip=true`） |
 
 - 破坏性变更（配置前缀、默认镜像、默认 client、公共 TC API）须更新 README / CHANGELOG，并体现在版本号。
 - 第三方依赖版本优先由 Spring Boot 父 POM / BOM 管理；子模块不硬编码版本。

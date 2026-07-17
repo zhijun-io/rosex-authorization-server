@@ -7,7 +7,12 @@
 ### Changed
 
 - 可运行模块由 `rosex-authorization-server-app` 重命名为 `rosex-authorization-server`
+- `rosex-authorization-server-sample` 设置 `maven.deploy.skip=true`，不发布到 Maven
 
+### Added
+
+- README 徽章（CI / License / Java / Spring Boot / GHCR）
+- CHANGELOG、CONTRIBUTING、SECURITY、NOTICE
 ## [0.1.0-SNAPSHOT] - 2026-07-17
 
 ### Added

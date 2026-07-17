@@ -1,5 +1,11 @@
 # rosex-authorization-server
 
+[![CI](https://github.com/zhijun-io/rosex-authorization-server/actions/workflows/maven.yml/badge.svg)](https://github.com/zhijun-io/rosex-authorization-server/actions/workflows/maven.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F.svg)](https://spring.io/projects/spring-boot)
+[![GHCR](https://img.shields.io/badge/ghcr.io-zhijun--io%2Frosex--authorization--server-blue)](https://github.com/zhijun-io/rosex-authorization-server/pkgs/container/rosex-authorization-server)
+
 本地 / 集成测试用的 **OIDC Authorization Server**（**勿用于生产**）。
 
 基于 Spring Boot 4.1 与 Spring Security OAuth2 Authorization Server，提供可运行的 IdP、Testcontainers 封装，以及可联调的 OAuth2 Client sample。适合在开发机或 CI 中验证登录、授权码、Refresh Token、自定义 claims（如 `roles`）等流程。
@@ -21,17 +27,17 @@
 - **启动时打印 Client 配置片段**：可直接粘贴到 Boot OAuth2 Client
 - **健康检查**：`/actuator/health`，方便 Testcontainers / Docker wait
 - **Testcontainers 模块**：固定镜像、端口、issuer、默认 client 常量
-- **Sample 应用**：端到端演示 OAuth2 Login
+- **Sample 应用**：端到端演示 OAuth2 Login（**不发布到 Maven**）
 - **TLS**：沿用 Spring Boot SSL Bundle 配置
 
 ## 模块
 
-| 模块 | 坐标 | 说明 |
-|---|---|---|
-| `rosex-authorization-server-parent` | 父 POM | 版本与依赖管理 |
-| `rosex-authorization-server` | 可运行 AS | 打 jar / 构建 Docker 镜像 |
-| `rosex-authorization-server-testcontainers` | TC 封装 | `RosexAuthorizationServerContainer` |
-| `rosex-authorization-server-sample` | 示例 Client | 浏览器登录演示 + OIDC IT |
+| 模块 | 坐标 | 发布 | 说明 |
+|---|---|---|---|
+| `rosex-authorization-server-parent` | 父 POM | 是 | 版本与依赖管理 |
+| `rosex-authorization-server` | 可运行 AS | 是（jar + GHCR） | 打 jar / 构建 Docker 镜像 |
+| `rosex-authorization-server-testcontainers` | TC 封装 | 是 | `RosexAuthorizationServerContainer` |
+| `rosex-authorization-server-sample` | 示例 Client | **否** | 浏览器登录演示 + OIDC IT；`maven.deploy.skip=true` |
 
 ## 快速开始
 

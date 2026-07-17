@@ -12,7 +12,11 @@
 
     <artifactId>rosex-authorization-server-sample</artifactId>
     <name>rosex-authorization-server-sample</name>
-    <description>Sample OAuth2 client against Rosex Authorization Server</description>
+    <description>Sample OAuth2 client against Rosex Authorization Server (not published)</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <dependencies>
         <dependency>
