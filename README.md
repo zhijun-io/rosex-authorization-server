@@ -70,7 +70,7 @@ java -jar rosex-authorization-server/target/rosex-authorization-server.jar --con
 
 ## 配置
 
-配置前缀：`rosex.authorization-server`。示例见 [`samples/config.yml`](docs/config.yml)：
+配置前缀：`rosex.authorization-server`。示例见 [`samples/config.yml`](samples/config.yml)：
 
 ```yaml
 rosex:
